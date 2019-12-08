@@ -9,4 +9,4 @@ WORKDIR ${HOME_APP}
 
 RUN pip install -r requirements.txt
 
-CMD ['python', '-m', 'kafka_to_s3.main']
+CMD ["python", "-m", "kafka_to_s3.main"]
