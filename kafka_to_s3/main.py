@@ -4,8 +4,9 @@ from confluent_kafka import Consumer
 aws_access_key_id = os.environ['AWS_ACCESS_KEY_ID']
 aws_secret_access_key = os.environ['AWS_SECRET_ACCESS_KEY']
 aws_bucket_name = os.environ['AWS_BUCKET_NAME']
+aws_prefix = os.environ.get('AWS_PREFIX') or os.environ['KAFKA_TOPIC_NAME']
 
-kafka_topic_name = os.environ['KAFKA_TOPIC_NAME']
+kafka_topic_names = os.environ['KAFKA_TOPIC_NAMES'].split(",")
 kafka_bootstrap_server = os.environ['KAFKA_BOOTSTRAP_SERVERS']
 kafka_group_id = os.environ['KAFKA_GROUP_ID']
 
@@ -22,7 +23,7 @@ consumer = Consumer({
     'enable.auto.commit': False
 })
 
-consumer.subscribe([kafka_topic_name])
+consumer.subscribe(kafka_topic_names)
 
 
 def fetch_messages():
@@ -52,8 +53,9 @@ def build_file(messages):
 
 def save(file):
     d = datetime.datetime.now().strftime("year=%Y/month=%m/day=%d/hour=%H")
-    client.put_object(Bucket=aws_bucket_name, Key=f"{kafka_topic_name}/{d}/{uuid.uuid4()}.jsonl", Body=file)
-    return f"s3://{aws_bucket_name}/{kafka_topic_name}/{d}/{uuid.uuid4()}.jsonl"
+    basepath = f"{aws_prefix}/{d}/{uuid.uuid4()}.jsonl"
+    client.put_object(Bucket=aws_bucket_name, Key=basepath, Body=file)
+    return f"s3://{aws_bucket_name}/{basepath}.jsonl"
 
 try:
     while True:
